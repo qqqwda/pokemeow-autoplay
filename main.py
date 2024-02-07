@@ -6,18 +6,19 @@ import os
 import uuid
 from selenium.webdriver.common.by import By
 import requests
-
-POKEMON_DICTIONARY = {"Legendary": "masterball",     "Shiny": "masterball",     "Super": "ultraball",
-                      "Rare": "greatball",     "Uncommon": "pokeball",     "Common": "pokeball", }
-
-USERNAME = "yourMail@gmail.com"
-PASSWORD = "yourPassword"
-
-#choose channel
-CHANNEL = "https://discord.com/channels/785300456779677756/794297684168015933"
+from dotenv import load_dotenv
+import json
 
 
-t = 3
+
+load_dotenv()
+
+DISCORD_EMAIL = os.getenv('DISCORD_EMAIL')
+PASSWORD = os.getenv('PASSWORD')
+CHANNEL = os.getenv('CHANNEL')
+POKEMON_DICTIONARY = json.loads(os.getenv('POKEMON_DICTIONARY'))
+PREDICT_CAPTCHA_URL = os.getenv('PREDICT_CAPTCHA_URL')
+DRIVER_PATH = os.getenv('DRIVER_PATH')
 
 class Main:
     def __init__(self, driver_path):
@@ -48,7 +49,7 @@ class Main:
         self.driver.find_element(
             "xpath", "//button[@class='marginBottom8_f4aae3 button__47891 button_afdfd9 lookFilled__19298 colorBrand_b2253e sizeLarge__9049d fullWidth__7c3e8 grow__4c8a4']").click()
 
-        time.sleep(20)
+        time.sleep(8)
         pass
     
     def get_last_message_by_user(self, username):
@@ -134,7 +135,7 @@ class Main:
         return None
     
     def send_image(self, image_path):
-        url = "http://26.112.5.161:5000/predict"
+        url = PREDICT_CAPTCHA_URL
 
         # Open the image file in binary mode
         with open(image_path, "rb") as image_file:
@@ -167,10 +168,21 @@ class Main:
             print('🔓 Captcha solved!')
             return
         else:
-            print('🔒 Captcha failed!')
-            print('🔒 Trying again!')
+            print('❌ Captcha failed!')
+            print('❌ Trying again!')
             self.solve_captcha()
             
+    def wait_for_solve_captcha(self):
+        # resp = self.get_captcha()
+        print(f'🔒 Waiting for you to solve captcha... ')
+        time.sleep(4)
+                
+        pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
+        if "Thank you" in pokemeow_last_message:
+            print('🔓 Captcha solved!')
+            return
+        else:
+            self.wait_for_solve_captcha()
                     
     def play(self):
         while True:
@@ -197,7 +209,8 @@ class Main:
                 if "Please wait" in pokemeow_last_message:
                     sleep_time = 0.5
                 else:
-                    self.solve_captcha()
+                    # self.solve_captcha()
+                    self.wait_for_solve_captcha()
                     sleep_time = 1
                 
             else:
@@ -208,12 +221,12 @@ class Main:
         pass
 
 if __name__ == "__main__":
-    main = Main("webdrivers\Chrome\chromedriver.exe")
+    print('🚀 Starting bot...')
+    main = Main(DRIVER_PATH)
     main.start_driver()
     main.navigate_to_page("https://discord.com/login")
     main.navigate_to_page(CHANNEL)
-    main.login(USERNAME,PASSWORD)
-    # time.sleep(300)
+    main.login(DISCORD_EMAIL,PASSWORD)
     main.play()
     
     
