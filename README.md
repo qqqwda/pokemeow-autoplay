@@ -50,3 +50,5 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
     ```
 
 Ensure you replace placeholder values with your actual data before proceeding. This setup guide is designed to help you get started with the PokeMeow Catcher Bot quickly and efficiently.
+
+Send me a message on Discord 🤖: cursedelboom
