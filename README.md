@@ -16,33 +16,37 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 
 1. **Install Python 3.10:** Ensure you have Python 3.10 installed on your system. You can download it from the official Python website. 📥
 2. **Clone the Repository:** Clone this repository to your local machine or download the source code. 📂
-3. **Check Chrome Version:** Before installing ChromeDriver, it's important to check your current version of Google Chrome to ensure compatibility. Open Google Chrome, click on the three dots in the upper right corner to open the menu, then go to "Help" > "About Google Chrome". Your Chrome version will be displayed here.
-4. **Download Chrome Web Driver:** If you are using a Chrome version > 121 you can use this link: https://googlechromelabs.github.io/chrome-for-testing/ if not, use https://chromedriver.chromium.org/downloads and download the version that you need
+3. **Check Chrome Version:** Before installing ChromeDriver, it's important to check your current version of Google Chrome to ensure compatibility. Open Google Chrome, click on the three dots in the upper right corner to open the menu, then go to "Help" > "About Google Chrome". Your Chrome version will be displayed here. 🔍
+4. **Download ChromeDriver:** Depending on your Chrome version, download the corresponding ChromeDriver.
+   - For Chrome Version 121 or higher: [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/)
+   - For Chrome Version lower than 121: [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads)
+   - Paste the `chromedriver.exe` inside the `'webdrivers\Chrome'` folder. 📦
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
-6. **Configure Environment Variables:** Create a `.env` file in the root directory and add your Discord and PokeMeow credentials. 📝
-   ## ⚙️ Configuring Environment Variables
+6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
-  Before running the PokeMeow Catcher Bot, you need to set up your environment variables. These variables include your Discord login credentials, the channel URL for catching Pokemons, the dictionary for Pokemon catching strategy, the path to your ChromeDriver, and the URL for the captcha prediction service.
-  
-  Create a `.env` file in the root directory of your project and populate it with the following variables:
-  
-     ```plaintext
-     # Discord credentials
-     DISCORD_EMAIL=yourloginemail@gmail.com
-     PASSWORD=yourpassword
-     
-     # Channel URL
-     CHANNEL=https://discord.com/channels/yourserverid/yourchannelid
-     
-     # Pokemon catching strategy dictionary
-     POKEMON_DICTIONARY={"Legendary": "masterball", "Shiny": "masterball", "Super": "ultraball", "Rare": "greatball", "Uncommon": "pokeball", "Common": "pokeball"}
-     
-     # Path to your ChromeDriver
-     DRIVER_PATH=path/to/your/chromedriver.exe
+    Create a `.env` file with the following structure:
 
+    ```plaintext
+    # Discord credentials
+    DISCORD_EMAIL=yourloginemail@gmail.com
+    PASSWORD=yourpassword
 
-8. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. 🎮
-   ```plaintext
-    py main.py
+    # Channel URL
+    CHANNEL=https://discord.com/channels/yourserverid/yourchannelid
+
+    # Pokemon catching strategy dictionary
+    POKEMON_DICTIONARY={"Legendary": "masterball", "Shiny": "masterball", "Super": "ultraball", "Rare": "greatball", "Uncommon": "pokeball", "Common": "pokeball"}
+
+    # Path to your ChromeDriver
+    DRIVER_PATH=path/to/your/chromedriver.exe
+    ```
+
+    Replace the placeholders with your actual data.
+
+7. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. Use the following command to run your bot: 🎮
+
+    ```bash
     python main.py
+    ```
 
+Ensure you replace placeholder values with your actual data before proceeding. This setup guide is designed to help you get started with the PokeMeow Catcher Bot quickly and efficiently.
