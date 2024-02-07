@@ -16,7 +16,8 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 
 1. **Install Python 3.10:** Ensure you have Python 3.10 installed on your system. You can download it from the official Python website. 📥
 2. **Clone the Repository:** Clone this repository to your local machine or download the source code. 📂
-3. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
-4. **Configure Environment Variables:** Create a `.env` file in the root directory and add your Discord and PokeMeow credentials. 📝
-5. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. 🎮
+3. **Download Chrome Web Driver:** If you are using a Chrome version > 121 you can use this link: https://googlechromelabs.github.io/chrome-for-testing/ if not, use https://chromedriver.chromium.org/downloads and download the version that you need
+4. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
+5. **Configure Environment Variables:** Create a `.env` file in the root directory and add your Discord and PokeMeow credentials. 📝
+6. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. 🎮
 
