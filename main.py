@@ -185,6 +185,7 @@ class Main:
             self.wait_for_solve_captcha()
                     
     def play(self):
+        time.sleep(4)
         while True:
             sleep_time = 6.5
             span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
@@ -225,8 +226,8 @@ if __name__ == "__main__":
     main = Main(DRIVER_PATH)
     main.start_driver()
     main.navigate_to_page("https://discord.com/login")
-    main.navigate_to_page(CHANNEL)
     main.login(DISCORD_EMAIL,PASSWORD)
+    main.navigate_to_page(CHANNEL)
     main.play()
     
     
