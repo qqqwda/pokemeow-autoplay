@@ -20,7 +20,7 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 4. **Download ChromeDriver:** Depending on your Chrome version, download the corresponding ChromeDriver.
    - For Chrome Version 121 or higher: [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/)
    - For Chrome Version lower than 121: [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads)
-   - Paste the `chromedriver.exe` inside the `'webdrivers\Chrome'` folder. 📦
+   - Paste / Replace the `chromedriver.exe` inside the `'webdrivers\Chrome'` folder. 📦
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
 6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
