@@ -26,22 +26,23 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
   
   Create a `.env` file in the root directory of your project and populate it with the following variables:
   
-  ```plaintext
-  # Discord credentials
-  DISCORD_EMAIL=yourloginemail@gmail.com
-  PASSWORD=yourpassword
-  
-  # Channel URL
-  CHANNEL=https://discord.com/channels/yourserverid/yourchannelid
-  
-  # Pokemon catching strategy dictionary
-  POKEMON_DICTIONARY={"Legendary": "masterball", "Shiny": "masterball", "Super": "ultraball", "Rare": "greatball", "Uncommon": "pokeball", "Common": "pokeball"}
-  
-  # Path to your ChromeDriver
-  DRIVER_PATH=path/to/your/chromedriver.exe
+     ```plaintext
+     # Discord credentials
+     DISCORD_EMAIL=yourloginemail@gmail.com
+     PASSWORD=yourpassword
+     
+     # Channel URL
+     CHANNEL=https://discord.com/channels/yourserverid/yourchannelid
+     
+     # Pokemon catching strategy dictionary
+     POKEMON_DICTIONARY={"Legendary": "masterball", "Shiny": "masterball", "Super": "ultraball", "Rare": "greatball", "Uncommon": "pokeball", "Common": "pokeball"}
+     
+     # Path to your ChromeDriver
+     DRIVER_PATH=path/to/your/chromedriver.exe
+
+
 8. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. 🎮
    ```plaintext
     py main.py
-    # Or
     python main.py
 
