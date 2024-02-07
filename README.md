@@ -1,6 +1,7 @@
-# 🤖 PokeMeow Catcher Bot
+# 🤖 PokeMeow autoplay
 
-Welcome to the PokeMeow Catcher Bot, a sophisticated Python application designed to automate the process of catching Pokemons in the popular Discord game, PokeMeow. Utilizing the power of Selenium and ChromeDriver, this bot offers a seamless and efficient way to enhance your PokeMeow experience.
+Python application designed to automate the process of catching Pokemons in the popular Discord game, PokeMeow. Utilizing the power of Selenium and ChromeDriver, this bot offers a seamless and efficient way to enhance your PokeMeow experience.
+Working on Captcha solving !
 
 ## ⚠️ Disclaimer
 Please note, while this bot is designed to automate tasks within PokeMeow, users are encouraged to use it responsibly and in accordance with the game's terms of service. The developer of this bot assumes no responsibility for any bans or penalties that may result from the use of this bot. Users should be aware of PokeMeow's rules and use the bot at their own risk.
