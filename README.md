@@ -24,7 +24,7 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
 6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
-    Create a `.env` file with the following structure:
+    Create or use my `.env` file with the following structure:
 
     ```plaintext
     # Discord credentials
