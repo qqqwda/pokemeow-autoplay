@@ -4,13 +4,15 @@ Python application designed to automate the process of catching Pokemons in the 
 - I'll be updating this repo, in the future I will add an endpoint for Captcha Solving 🧩
 - New API for captcha solver: https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver (Note: this might work slow)
   ```plaintext
+  #This is an example of how to implement the captcha solver in Python
+  #Note that you need an 
   import requests
       
   url = "https://pokemeow-captcha-solver.p.rapidapi.com/predict"
       
   files = { "file": "open('captcha-file.png', 'rb')" }
   headers = {
-  "X-RapidAPI-Key": "3fe858485cmsh4b09dad8226ecc6p149f14jsn799ac3bc7fb1",
+  "X-RapidAPI-Key": "api-key",
   "X-RapidAPI-Host": "pokemeow-captcha-solver.p.rapidapi.com"
   }
       
