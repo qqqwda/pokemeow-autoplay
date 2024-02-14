@@ -1,8 +1,8 @@
 # 🤖 PokeMeow autoplay
 
 Python application designed to automate the process of catching Pokemons in the popular Discord game, PokeMeow. Utilizing the power of Selenium and ChromeDriver.
-- I'll be updating this repo, in the future I will add an endpoint for Captcha Solving 🧩
-- New API for captcha solver: https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver (Note: this might work slow)
+- I'll be updating this repo, in the future I will add an endpoint for Captcha Solving 🧩 (Done)
+- ✨ New API for captcha solver: https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver (Note: this might work slow)
   ```plaintext
   #This is an example of how to implement the captcha solver in Python
   #Note that you need your own 'X-RapidAPI-Key'
