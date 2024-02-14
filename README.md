@@ -3,6 +3,21 @@
 Python application designed to automate the process of catching Pokemons in the popular Discord game, PokeMeow. Utilizing the power of Selenium and ChromeDriver.
 - I'll be updating this repo, in the future I will add an endpoint for Captcha Solving 🧩
 - New API for captcha solver: https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver (Note: this might work slow)
+  ```plaintext
+  import requests
+      
+  url = "https://pokemeow-captcha-solver.p.rapidapi.com/predict"
+      
+  files = { "file": "open('captcha-file.png', 'rb')" }
+  headers = {
+  "X-RapidAPI-Key": "3fe858485cmsh4b09dad8226ecc6p149f14jsn799ac3bc7fb1",
+  "X-RapidAPI-Host": "pokemeow-captcha-solver.p.rapidapi.com"
+  }
+      
+  response = requests.post(url, files=files, headers=headers)
+  print(response.json())
+    ```
+
 ## ⚠️ Disclaimer
 Please note, while this bot is designed to automate tasks within PokeMeow, users are encouraged to use it responsibly and in accordance with the game's terms of service. The developer of this bot assumes no responsibility for any bans or penalties that may result from the use of this bot. Users should be aware of PokeMeow's rules and use the bot at their own risk.
 
