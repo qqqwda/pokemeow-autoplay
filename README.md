@@ -10,7 +10,8 @@ This Python application is designed to automate the process of catching Pokemons
 The captcha solver currently boasts around a 90% accuracy rate 🎯. However, expect some low latency due to hosting conditions 🐢. We are continuously working to improve this service for a smoother experience.
 
 ## Example Code 🧑‍💻
-Below is an example of how to implement the captcha solver in Python. Note that you need your own 'X-RapidAPI-Key' for authentication.
+Below is an example of how to implement the captcha solver in Python. 
+Note that you need your own 'X-RapidAPI-Key' for authentication.
 
 ```python
 import requests
