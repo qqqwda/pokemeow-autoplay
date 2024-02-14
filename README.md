@@ -1,6 +1,6 @@
-# PokeMeow autoplay README 🚀
+# PokéMeow autoplay README 🚀
 
-This Python application is designed to automate the process of catching Pokemons in the popular Discord game, PokeMeow. Utilizing Selenium and ChromeDriver.
+This Python application is designed to automate the process of catching Pokemons in the popular Discord game, PokéMeow. Utilizing Selenium and ChromeDriver.
 
 ## Updates 📢
 - **Captcha Solving Endpoint 🧩**: An update has been made to include an endpoint for Captcha Solving. This feature is now fully operational!
