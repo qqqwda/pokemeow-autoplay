@@ -49,21 +49,17 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
 6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
+Get API key here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver)
     Create or use my `.env` file with the following structure:
 
     ```plaintext
-    # Discord credentials
-    DISCORD_EMAIL=yourloginemail@gmail.com
-    PASSWORD=yourpassword
-
-    # Channel URL
-    CHANNEL=https://discord.com/channels/yourserverid/yourchannelid
-
-    # Pokemon catching strategy dictionary
+    DISCORD_EMAIL=loginemail@gmail.com
+    PASSWORD=123456789
+    CHANNEL=https://discord.com/channels/785300456779677756/794297684168015933
     POKEMON_DICTIONARY={"Legendary": "masterball", "Shiny": "masterball", "Super": "ultraball", "Rare": "greatball", "Uncommon": "pokeball", "Common": "pokeball"}
-
-    # Path to your ChromeDriver
-    DRIVER_PATH=path/to/your/chromedriver.exe
+    DRIVER_PATH = webdrivers\Chrome\chromedriver.exe
+    PREDICT_CAPTCHA_URL=https://pokemeow-captcha-solver.p.rapidapi.com/predict
+    API_KEY=YOUR-API-KEY
     ```
 
     Replace the placeholders with your actual data.
