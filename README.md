@@ -49,6 +49,10 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
 6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
+
+    Get the API-KEY 🔑: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver)
+
+
     Create or use my `.env` file with the following structure:
 
     ```plaintext
@@ -71,6 +75,7 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
     API_KEY=YOUR-API-KEY
 
     ```
+
 Replace the placeholders with your actual data.
 
 7. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. Use the following command to run your bot: 🎮
