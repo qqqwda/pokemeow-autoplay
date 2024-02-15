@@ -19,6 +19,7 @@ CHANNEL = os.getenv('CHANNEL')
 POKEMON_DICTIONARY = json.loads(os.getenv('POKEMON_DICTIONARY'))
 PREDICT_CAPTCHA_URL = os.getenv('PREDICT_CAPTCHA_URL')
 DRIVER_PATH = os.getenv('DRIVER_PATH')
+API_KEY = os.getenv('API_KEY')
 
 class Main:
     def __init__(self, driver_path):
@@ -136,6 +137,10 @@ class Main:
     
     def send_image(self, image_path):
         url = PREDICT_CAPTCHA_URL
+        headers = {
+            "X-RapidAPI-Key": API_KEY,
+            "X-RapidAPI-Host": "pokemeow-captcha-solver.p.rapidapi.com"
+        }
 
         # Open the image file in binary mode
         with open(image_path, "rb") as image_file:
@@ -145,7 +150,7 @@ class Main:
             print("🚀 Sending image...")
 
             # Make the POST request and get the response
-            response = requests.post(url, files=files)
+            response = requests.post(url, files=files, headers=headers)
 
         # If the request was successful, print the number from the response
         if response.status_code == 200:
@@ -210,8 +215,7 @@ class Main:
                 if "Please wait" in pokemeow_last_message:
                     sleep_time = 0.5
                 else:
-                    # self.solve_captcha()
-                    self.wait_for_solve_captcha()
+                    self.solve_captcha()
                     sleep_time = 1
                 
             else:
