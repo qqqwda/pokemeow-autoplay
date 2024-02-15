@@ -4,7 +4,7 @@ This Python application is designed to automate the process of catching Pokemons
 
 ## Updates 📢 (Please check branch: [captcha-beta](https://github.com/qqqwda/pokemeow-autoplay/tree/captcha-beta))
 - **Captcha Solving Endpoint 🧩**: An update has been made to include an endpoint for Captcha Solving. This feature is now fully operational!
-- **New Captcha Solver API ✨**: We are excited to introduce a new API for captcha solving! You can find it here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver). Please note that this service might operate with some delay. We are in the process of integrating this API in our new code version.
+- **New Captcha Solver API ✨**: We are excited to introduce a new API for captcha solving! You can find it here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver). Please note that this service might operate with some delay.
 
 ## Captcha Solver Accuracy and Latency ⚙️🕒
 The captcha solver currently boasts around a 90% accuracy rate 🎯. However, expect some low latency due to hosting conditions 🐢. We are continuously working to improve this service for a smoother experience.
