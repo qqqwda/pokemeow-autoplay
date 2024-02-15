@@ -156,11 +156,8 @@ class Main:
     
     def solve_captcha(self):
         resp = self.get_captcha()
-        print(f'🔒 captcha response: {resp}')
-                
-        span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
-        ActionChains(self.driver).send_keys_to_element(span, f"{resp}").perform()
-        ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
+        print(f'🔒 captcha response: {resp}')git
+        self.write(resp)
         time.sleep(4)
                 
         pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
@@ -171,7 +168,13 @@ class Main:
             print('❌ Captcha failed!')
             print('❌ Trying again!')
             self.solve_captcha()
-            
+
+    
+    def write(self, msg):
+        span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
+        ActionChains(self.driver).send_keys_to_element(span, Keys.BACK_SPACE*20).send_keys_to_element(span, msg).perform()
+        ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
+ 
     def wait_for_solve_captcha(self):
         # resp = self.get_captcha()
         print(f'🔒 Waiting for you to solve captcha... ')
@@ -188,11 +191,7 @@ class Main:
         time.sleep(4)
         while True:
             sleep_time = 6.5
-            span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
-
-            ActionChains(self.driver).send_keys_to_element(span, ";p").perform()
-            ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
-
+            self.write(";p")
             pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
             time.sleep(3)   
             texto = self.driver.find_elements(
