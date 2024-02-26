@@ -8,7 +8,7 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 
 ## Updates 📢
 - **Captcha Solving Endpoint 🧩**: An update has been made to include an endpoint for Captcha Solving. This feature is now fully operational!
-- **New Captcha Solver API ✨**: We are excited to introduce a new API for captcha solving! You can find it here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver). Please note that this service might operate with some delay. We are in the process of integrating this API in our new code version.
+- **New Captcha Solver API ✨**: We are excited to introduce a new API for captcha solving! You can find it here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver). Please note that this service might operate with some delay.
 
 ## Captcha Solver Accuracy and Latency ⚙️🕒
 The captcha solver currently boasts around a 90% accuracy rate 🎯. However, expect some low latency due to hosting conditions 🐢. We are continuously working to improve this service for a smoother experience.
@@ -32,7 +32,6 @@ headers = {
 response = requests.post(url, files=files, headers=headers)
 print(response.json())
 ```
-
 ## 📋 Requirements
 - **Python 3.10:** This bot is developed and tested with Python 3.10. It is recommended to use this version for compatibility purposes, although other versions have not been tested. 🐍
 - **Selenium 4.9.0:** For automating web browser interaction. 🌐
