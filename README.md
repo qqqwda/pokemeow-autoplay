@@ -6,7 +6,7 @@ This Python application is designed to automate the process of catching Pokemons
 Please note, while this bot is designed to automate tasks within PokeMeow, users are encouraged to use it responsibly and in accordance with the game's terms of service. The developer of this bot assumes no responsibility for any bans or penalties that may result from the use of this bot. Users should be aware of PokeMeow's rules and use the bot at their own risk.
 
 
-## Updates 📢 (Please check branch: [captcha-beta](https://github.com/qqqwda/pokemeow-autoplay/tree/captcha-beta))
+## Updates 📢
 - **Captcha Solving Endpoint 🧩**: An update has been made to include an endpoint for Captcha Solving. This feature is now fully operational!
 - **New Captcha Solver API ✨**: We are excited to introduce a new API for captcha solving! You can find it here: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver). Please note that this service might operate with some delay.
 
@@ -50,6 +50,10 @@ print(response.json())
 5. **Install Dependencies:** Run `pip install -r requirements.txt` in your terminal to install the necessary dependencies. 🛠️
 6. **Configure Environment Variables:** Setup your environment variables by creating a `.env` file in the root directory. Include your Discord and PokeMeow credentials, channel URL, Pokemon catching strategy dictionary, ChromeDriver path, and the URL for the captcha prediction service. ⚙️
 
+
+    Get the API-KEY 🔑: [PokeMeow Captcha Solver](https://rapidapi.com/qqqwda/api/pokemeow-captcha-solver)
+
+
     Create or use my `.env` file with the following structure:
 
     ```plaintext
@@ -65,9 +69,15 @@ print(response.json())
 
     # Path to your ChromeDriver
     DRIVER_PATH=path/to/your/chromedriver.exe
+    
+    PREDICT_CAPTCHA_URL=https://pokemeow-captcha-solver.p.rapidapi.com/predict
+
+    # Remember to set you API-KEY here
+    API_KEY=YOUR-API-KEY
+
     ```
 
-    Replace the placeholders with your actual data.
+Replace the placeholders with your actual data.
 
 7. **Run the Bot:** Execute the bot script with Python to start catching Pokemons automatically. Use the following command to run your bot: 🎮
 
