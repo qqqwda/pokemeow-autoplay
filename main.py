@@ -161,7 +161,7 @@ class Main:
     
     def solve_captcha(self):
         resp = self.get_captcha()
-        print(f'🔒 captcha response: {resp}')git
+        print(f'🔒 captcha response: {resp}')
         self.write(resp)
         time.sleep(4)
                 
