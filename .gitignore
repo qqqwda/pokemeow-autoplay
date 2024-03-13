@@ -1,0 +1,5 @@
+.env
+webdrivers/
+captchas/
+file.log
+html.html

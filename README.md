@@ -2,7 +2,9 @@
 
 This Python application is designed to automate the process of catching Pokemons in the popular Discord game, PokéMeow. Utilizing Selenium and ChromeDriver.
 
-# [DEMO 🎥](https://youtu.be/i1388jdcxXs)
+![image](https://github.com/qqqwda/pokemeow-autoplay/assets/41929135/fee82574-c91e-4f3a-ac9d-1e147d4565c2)
+
+# [DEMO 🎥](https://www.youtube.com/watch?v=AgggVKY3kgY&ab_channel=Crossedelboom)
 
 ## ⚠️ Disclaimer
 Please note, while this bot is designed to automate tasks within PokeMeow, users are encouraged to use it responsibly and in accordance with the game's terms of service. The developer of this bot assumes no responsibility for any bans or penalties that may result from the use of this bot. Users should be aware of PokeMeow's rules and use the bot at their own risk.
@@ -14,31 +16,6 @@ Please note, while this bot is designed to automate tasks within PokeMeow, users
 
 ## Captcha Solver Accuracy and Latency ⚙️🕒
 The captcha solver currently boasts around a 90% accuracy rate 🎯. However, expect some low latency due to hosting conditions 🐢. We are continuously working to improve this service for a smoother experience.
-
-## Example Code 🧑‍💻
-Below is an example of how to implement the captcha solver in Python. 
-Note that you need your own 'X-RapidAPI-Key' for authentication.
-
-```python
-import requests
-
-url = "https://pokemeow-captcha-solver.p.rapidapi.com/predict"
-
-# Replace 'captcha-file.png' with the path to your captcha image
-files = { "file": open('captcha-file.png', 'rb') }
-headers = {
-    "X-RapidAPI-Key": "your-api-key-here",
-    "X-RapidAPI-Host": "pokemeow-captcha-solver.p.rapidapi.com"
-}
-
-response = requests.post(url, files=files, headers=headers)
-print(response.json())
-```
-## 📋 Requirements
-- **Python 3.10:** This bot is developed and tested with Python 3.10. It is recommended to use this version for compatibility purposes, although other versions have not been tested. 🐍
-- **Selenium 4.9.0:** For automating web browser interaction. 🌐
-- **Requests:** For making HTTP requests. 📡
-- **python-dotenv:** For managing environment variables. 🔑
 
 ## 🚀 Setup Instructions
 
@@ -77,6 +54,8 @@ print(response.json())
     # Remember to set you API-KEY here
     API_KEY=YOUR-API-KEY
 
+    RARITY_EMOJI={"Legendary": "🔮", "Shiny": "✨", "Super": "🌟", "Super Rare": "🌟", "Rare": "💎", "Uncommon": "🍀", "Common": "🌱"}
+
     ```
 
 Replace the placeholders with your actual data.
@@ -88,6 +67,29 @@ Replace the placeholders with your actual data.
     ```
 
 Ensure you replace placeholder values with your actual data before proceeding. This setup guide is designed to help you get started with the PokeMeow Catcher Bot quickly and efficiently.
+
+
+
+## Example Code for Captcha Solver Api Service🧑‍💻
+Below is an example of how to implement the captcha solver in Python. 
+Note that you need your own 'X-RapidAPI-Key' for authentication.
+
+```python
+import requests
+
+url = "https://pokemeow-captcha-solver.p.rapidapi.com/predict"
+
+# Replace 'captcha-file.png' with the path to your captcha image
+files = { "file": open('captcha-file.png', 'rb') }
+headers = {
+    "X-RapidAPI-Key": "your-api-key-here",
+    "X-RapidAPI-Host": "pokemeow-captcha-solver.p.rapidapi.com"
+}
+
+response = requests.post(url, files=files, headers=headers)
+print(response.json())
+```
+
 
 ## 📬 Contact
 
