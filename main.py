@@ -1,5 +1,6 @@
 from selenium import webdriver
 import time
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 import os
@@ -8,18 +9,48 @@ from selenium.webdriver.common.by import By
 import requests
 from dotenv import load_dotenv
 import json
+import logging
+from bs4 import BeautifulSoup
+import re
+import threading
+import warnings
 
+# Ignore deprecation warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-
+# Your code here
 load_dotenv()
+# Create a custom logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 DISCORD_EMAIL = os.getenv('DISCORD_EMAIL')
 PASSWORD = os.getenv('PASSWORD')
 CHANNEL = os.getenv('CHANNEL')
 POKEMON_DICTIONARY = json.loads(os.getenv('POKEMON_DICTIONARY'))
+RARITY_EMOJI = json.loads(os.getenv('RARITY_EMOJI'))
 PREDICT_CAPTCHA_URL = os.getenv('PREDICT_CAPTCHA_URL')
 DRIVER_PATH = os.getenv('DRIVER_PATH')
 API_KEY = os.getenv('API_KEY')
+
+# Create handlers
+c_handler = logging.StreamHandler()
+# Create a file handler
+f_handler = logging.FileHandler('file.log', encoding='utf-8')
+
+c_handler.setLevel(logging.INFO)
+f_handler.setLevel(logging.ERROR)
+f_handler.setLevel(logging.INFO)
+
+# Create formatters and add it to handlers
+c_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+f_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+c_handler.setFormatter(c_format)
+f_handler.setFormatter(f_format)
+
+# Add handlers to the logger
+logger.addHandler(c_handler)
+logger.addHandler(f_handler)
 
 class Main:
     def __init__(self, driver_path):
@@ -27,19 +58,22 @@ class Main:
         self.driver = None
 
     def start_driver(self):
-        self.driver = webdriver.Chrome(executable_path=self.driver_path)
+        # Set up Chrome options
+        options = Options()
+        options.add_argument("--log-level=3")
+        self.driver = webdriver.Chrome(executable_path=self.driver_path, options=options)
 
     def navigate_to_page(self, url):
         if self.driver is not None:
             self.driver.get(url)
         else:
-            print("Driver not started. Call start_driver first.")
+            logger.info("Driver not started. Call start_driver first.")
 
     def quit_driver(self):
         if self.driver is not None:
             self.driver.quit()
         else:
-            print("Driver not started. Nothing to quit.")
+            logger.info("Driver not started. Nothing to quit.")
             
     def login(self, email, password):
         time.sleep(5)
@@ -47,6 +81,7 @@ class Main:
             "xpath", "//input[@class='inputDefault__80165 input_d266e7 inputField__79601']").send_keys(email)
         self.driver.find_element(
             "xpath", "//input[@class='inputDefault__80165 input_d266e7']").send_keys(password)
+        time.sleep(3)
         self.driver.find_element(
             "xpath", "//button[@class='marginBottom8_f4aae3 button__47891 button_afdfd9 lookFilled__19298 colorBrand_b2253e sizeLarge__9049d fullWidth__7c3e8 grow__4c8a4']").click()
 
@@ -128,7 +163,7 @@ class Main:
                 # Get the list of files in the captchas directory
             files = os.listdir("captchas")
             # Print the number of files with an emoji
-            print(f'📂 Number of images in captcha folder: {len(files)}')
+            logger.info(f'📂 Number of images in captcha folder: {len(files)}')
             
             
             return f"captchas/image_{image_id}.png"
@@ -147,31 +182,41 @@ class Main:
             # Create a dictionary with the file
             files = {"file": image_file}
 
-            print("🚀 Sending image...")
+            for _ in range(3):  # Retry up to 3 times
+                logger.info("🚀 Sending image to RapidApi...")
 
-            # Make the POST request and get the response
-            response = requests.post(url, files=files, headers=headers)
+                try:
+                    # Make the POST request and get the response
+                    response = requests.post(url, files=files, headers=headers, timeout=10)  # Wait up to 10 seconds
 
-        # If the request was successful, print the number from the response
-        if response.status_code == 200:
-            print("✅ Image sent successfully!")
-            return response.json()["number"]
-        else:
-            print("❌ Failed to send image")
+                    # If the request was successful, print the number from the response
+                    if response.status_code == 200:
+                        logger.info("✅ Image sent successfully!")
+                        return response.json()["number"]
+                    else:
+                        logger.info("❌ Failed to send image")
+                        logger.info(f"❌ Message: {response.json()['messages']}")
+                except requests.exceptions.Timeout:
+                    logger.info("⏰ Request timed out, retrying...")
+
+                # Wait for a bit before retrying
+                time.sleep(5)
+
+        logger.info("❌ Failed to send image after 3 attempts")
     
     def solve_captcha(self):
         resp = self.get_captcha()
-        print(f'🔒 captcha response: {resp}')
+        logger.info(f'🔒 captcha response: {resp}')
         self.write(resp)
         time.sleep(4)
                 
         pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
         if "Thank you" in pokemeow_last_message:
-            print('🔓 Captcha solved!')
+            logger.info('🔓 Captcha solved!')
             return
         else:
-            print('❌ Captcha failed!')
-            print('❌ Trying again!')
+            logger.info('❌ Captcha failed!')
+            logger.info('❌ Trying again!')
             self.solve_captcha()
 
     
@@ -182,26 +227,120 @@ class Main:
  
     def wait_for_solve_captcha(self):
         # resp = self.get_captcha()
-        print(f'🔒 Waiting for you to solve captcha... ')
+        logger.info(f'🔒 Waiting for you to solve captcha... ')
         time.sleep(4)
                 
         pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
         if "Thank you" in pokemeow_last_message:
-            print('🔓 Captcha solved!')
+            logger.info('🔓 Captcha solved!')
             return
         else:
             self.wait_for_solve_captcha()
+       
+    def get_catch_result(self, pokemon_info):
+        if isinstance(pokemon_info, str):
+            pokemon_info = json.loads(pokemon_info)
+        # Find all elements containing the ✅ emoji
+        time.sleep(3)
+        last_element_html = self.get_last_element_by_user("PokéMeow")
+        soup = BeautifulSoup(last_element_html.get_attribute('outerHTML'), "html.parser")
+        emoji_elements = soup.find_all(string=lambda text: '✅' in text)
+
+        # Get the Pokemon name and rarity from pokemon_info
+        pokemon_name = pokemon_info.get('Name')
+        pokemon_rarity = pokemon_info.get('Rarity')
+        emoji = RARITY_EMOJI.get(pokemon_rarity, '')
+        # Check if any element contains the ✅ emoji
+        if emoji_elements:
+            span = soup.find('span', {'class': 'embedFooterText_dc937f'})
+
+            # Get the text of the span
+            text = span.get_text()
+
+            # Use a regular expression to find the earned coins
+            earned_coins = re.search(r'earned ([\d,]+) PokeCoins', text)
+            earned_coins = int(earned_coins.group(1).replace(',', ''))
+
+            # Print the Pokemon name, rarity, and earned coins in one line
+            logger.info(f'✅ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}, Earned Coins: {earned_coins} 💰')
+                
+        else:
+            logger.info(f'❌ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}')
+            
                     
+    def get_pokemon_info(self):
+        
+        pokemon_info = {}
+        # Assuming self.get_last_element_by_user("PokéMeow") returns the HTML content of the last element by the user "PokéMeow"
+        last_element_html = self.get_last_element_by_user("PokéMeow")
+
+        # Parse the HTML content
+        soup = BeautifulSoup(last_element_html.get_attribute('outerHTML'), "html.parser")
+        # Find the element containing the Pokémon description
+        pokemon_description = soup.find("div", class_="embedDescription__33443")
+
+        if pokemon_description:
+            # Find all strong elements within the description
+            strong_elements = pokemon_description.find_all("strong")
+
+            if strong_elements:
+                # Get the last strong element
+                last_strong_element = strong_elements[-1]
+
+                # Extract Pokémon name
+                pokemon_info["Name"] = last_strong_element.get_text(strip=True)
+                
+        span = soup.find('span', {'class': 'embedFooterText_dc937f'}) 
+        text = span.get_text()
+        # Use a regular expression to find the rarity
+        rarity = re.search(r'(.+?)\s*\(', span.get_text())
+
+        # Check if a match was found
+        if rarity:
+            # Get the first group of the match
+            rarity = rarity.group(1).strip()
+            pokemon_info["Rarity"] = rarity
+
+        # Use a regular expression to find all occurrences of 'word: number'
+        matches = re.findall(r'(\w+)\s*:\s*([\d,]+)', text)
+
+        # Convert the matches to a dictionary
+        data = {k: int(v.replace(',', '')) for k, v in matches}
+        pokemon_info["Balls"] = json.dumps(data)
+        # Convert the dictionary to a JSON string
+        json_data = json.dumps(pokemon_info)
+
+        # Convert dictionary to JSON
+        pokemon_json = json.dumps(pokemon_info, indent=4)
+        return pokemon_json
+        
+        
     def play(self):
+        #Waits 4 seconds for the page to load 
         time.sleep(4)
+        
         while True:
-            sleep_time = 6.5
+            sleep_time = 6.8
             self.write(";p")
-            pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
+            #Wait for message from pokemeow
             time.sleep(3)   
+            pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
+            
+            if "Please wait" in pokemeow_last_message:
+                #Go back to the start of the loop
+                time.sleep(1)
+                continue
+            
+            if "TYPE" in pokemeow_last_message.lower():
+                logger.info('🔒 Captcha detected!')
+                self.solve_captcha()
+                continue
+                    
             texto = self.driver.find_elements(
                 "xpath", "//span[@class='embedFooterText_dc937f']")[-1].text
-
+            
+            pokemon_info = self.get_pokemon_info()
+            
             arraytext = texto.split()
             
             rarity = arraytext[0]
@@ -209,23 +348,18 @@ class Main:
             ball = POKEMON_DICTIONARY.get(rarity)
 
             if ball == None:
-                # Please wait
-                pokemeow_last_message = self.get_last_message_by_user("PokéMeow")
-                if "Please wait" in pokemeow_last_message:
-                    sleep_time = 0.5
-                else:
-                    self.solve_captcha()
-                    sleep_time = 1
+                self.solve_captcha()
+                sleep_time = 1
                 
             else:
                 (self.driver.find_elements("css selector",f'img[alt="{ball}"]')[-1].click())
-            
+                threading.Thread(target=self.get_catch_result, args=(pokemon_info,)).start()
             time.sleep(sleep_time)
 
-        pass
+
 
 if __name__ == "__main__":
-    print('🚀 Starting bot...')
+    logger.info('🚀 Starting bot...')
     main = Main(DRIVER_PATH)
     main.start_driver()
     main.navigate_to_page("https://discord.com/login")
