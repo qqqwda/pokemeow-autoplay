@@ -1,5 +1,8 @@
 .env
 webdrivers/
+__pycache__/
 captchas/
 file.log
-html.html
+index.html
+test/
+catch_counter.json

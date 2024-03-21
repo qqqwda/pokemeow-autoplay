@@ -14,6 +14,10 @@ from bs4 import BeautifulSoup
 import re
 import threading
 import warnings
+import random
+from buy import Buy
+from inventory import Inventory
+from counter import save_catch_counter, load_catch_counter
 
 # Ignore deprecation warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -195,7 +199,7 @@ class Main:
                         return response.json()["number"]
                     else:
                         logger.info("❌ Failed to send image")
-                        logger.info(f"❌ Message: {response.json()['messages']}")
+                        # logger.info(f"❌ Message: {response.json()['messages']}")
                 except requests.exceptions.Timeout:
                     logger.info("⏰ Request timed out, retrying...")
 
@@ -236,8 +240,46 @@ class Main:
             return
         else:
             self.wait_for_solve_captcha()
+    
+    def get_next_ball(self, current_ball):
+        balls_priority = {
+            "masterball": 4,
+            "ultraball": 3,
+            "greatball": 2,
+            "pokeball": 1
+        }
+
+        # Get the priority of the current ball
+        current_priority = balls_priority.get(current_ball)
+
+        # If the current ball is not in the dictionary or it's a Pokeball, return None
+        if current_priority is None or current_priority == 1:
+            return None
+
+        # Find the ball with the next highest priority
+        for ball, priority in sorted(balls_priority.items(), key=lambda item: item[1], reverse=True):
+            if priority < current_priority:
+                return ball
+    
+    def click_on_ball(self, ball):
+        # Attempt to find the specific ball first.
+        try:
+            last_element_html = self.get_last_element_by_user("PokéMeow")
+
+            balls = last_element_html.find_elements("css selector",f'img[alt="{ball}"]')
+            # balls = last_element_html.find_elements_by_css_selector(f'img[alt="{ball}"]')
+            if balls:
+                # If the specific ball is found, click on the last occurrence of that ball.
+                balls[-1].click()
+            else:
+                next_ball = self.get_next_ball(ball)
+                logger.info(f"❌ {ball} not found. Trying {next_ball}")
+                self.click_on_ball(next_ball)
+                
+        except Exception as e:
+            logger.log(f"An error occurred: {e}")
        
-    def get_catch_result(self, pokemon_info):
+    def get_catch_result(self, pokemon_info, count):
         if isinstance(pokemon_info, str):
             pokemon_info = json.loads(pokemon_info)
         # Find all elements containing the ✅ emoji
@@ -262,12 +304,65 @@ class Main:
             earned_coins = int(earned_coins.group(1).replace(',', ''))
 
             # Print the Pokemon name, rarity, and earned coins in one line
-            logger.info(f'✅ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}, Earned Coins: {earned_coins} 💰')
+            logger.info(f'[{count}]✅ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}, Earned Coins: {earned_coins} 💰')
                 
         else:
-            logger.info(f'❌ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}')
+            logger.info(f'[{count}]❌ Pokemon Name: {pokemon_name}, Rarity: {pokemon_rarity} {emoji}')
+     
+    def get_inventory(self):
+        time.sleep(1)
+        self.write(";inv")
+        # Wait to load inventory
+        time.sleep(3.5)
+        last_element_html = self.get_last_element_by_user("PokéMeow")
+        
+        inventory_json = Inventory.get_inventory(last_element_html)
+        if not inventory_json:
+            logger.info("❌Failed to get inventory.")
+            return
+        
+        # Load JSON into a Python object
+        inventory = json.loads(inventory_json)
+
+        return inventory
+        
+    def open_lootbox(self, inventory):
+        for item in inventory:
+            # Check if the item name is pokecoin
+            if item["name"] == "lootbox":
+                # Update pokecoin count
+                lootboxes = item["count"]
+                if lootboxes > 0:
+                    time.sleep(3)
+                    self.write(";lb all")
+                break
+    
+    def buy_balls(self, inventory):
+        # Initialize pokecoin count to 0
+        budget = 0
+
+        # Iterate over the inventory list
+        for item in inventory:
+            # Check if the item name is pokecoin
+            if item["name"] == "pokecoin":
+                # Update pokecoin count
+                budget = item["count"]
+                if budget > 200000:
+                    budget = 200000
+                break
             
-                    
+        commands = Buy.generate_purchase_commands(budget)
+        if not commands:
+            logger.info("❌Not Enought budget to buy balls.")
+            return
+        
+        for command in commands:
+            #Wait 3 scs before writing next command
+            logger.info(f'💰 {command}')
+            self.write(command)
+            time.sleep(5.5)
+            
+               
     def get_pokemon_info(self):
         
         pokemon_info = {}
@@ -306,7 +401,8 @@ class Main:
 
         # Convert the matches to a dictionary
         data = {k: int(v.replace(',', '')) for k, v in matches}
-        pokemon_info["Balls"] = json.dumps(data)
+        pokemon_info["Balls"] = data
+        
         # Convert the dictionary to a JSON string
         json_data = json.dumps(pokemon_info)
 
@@ -317,10 +413,14 @@ class Main:
         
     def play(self):
         #Waits 4 seconds for the page to load 
+        catch_counter = load_catch_counter()
+        time.sleep(3)
+        self.write(";daily")
         time.sleep(4)
-        
+        self.write(";quest")
+        time.sleep(4)
         while True:
-            sleep_time = 6.8
+            sleep_time = random.randint(9, 12)  # Random integer between 1 and 5
             self.write(";p")
             #Wait for message from pokemeow
             time.sleep(3)   
@@ -339,8 +439,6 @@ class Main:
             texto = self.driver.find_elements(
                 "xpath", "//span[@class='embedFooterText_dc937f']")[-1].text
             
-            pokemon_info = self.get_pokemon_info()
-            
             arraytext = texto.split()
             
             rarity = arraytext[0]
@@ -352,8 +450,30 @@ class Main:
                 sleep_time = 1
                 
             else:
-                (self.driver.find_elements("css selector",f'img[alt="{ball}"]')[-1].click())
-                threading.Thread(target=self.get_catch_result, args=(pokemon_info,)).start()
+                self.click_on_ball(ball)
+                
+                pokemon_info_json = self.get_pokemon_info()
+                info = json.loads(pokemon_info_json)
+                catch_counter += 1
+                save_catch_counter(catch_counter)
+                threading.Thread(target=self.get_catch_result, args=(pokemon_info_json,catch_counter,)).start()
+                
+                # Now you can access the elements of pokemon_info as a dictionary
+                
+                if info["Balls"]["Pokeballs"] <= 1 or info["Balls"]["Greatballs"] <= 1:
+                    inventory = self.get_inventory()
+                    self.buy_balls(inventory)
+                
+                if catch_counter % 25 == 0:
+                    self.write(";r d")
+                    time.sleep(4)
+                    inventory = self.get_inventory()
+                    self.open_lootbox(inventory)
+                
+                if catch_counter % 100 == 0:
+                    self.write(";quest")
+            # Save current catch count in memory
+            
             time.sleep(sleep_time)
 
 
