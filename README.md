@@ -7,7 +7,7 @@ This Python application is designed to automate the process of catching Pokemons
 ![image](https://github.com/qqqwda/pokemeow-autoplay/assets/41929135/c09acb38-34a6-4e68-9a18-08e211e89e61)
 
 
-# [DEMO 🎥](https://www.youtube.com/watch?v=AgggVKY3kgY&ab_channel=Crossedelboom)
+# [🎥 DEMO](https://www.youtube.com/watch?v=gJrNCuFWc-g&ab_channel=Crossedelboom)
 
 ## ⚠️ Disclaimer
 Please note, while this bot is designed to automate tasks within PokeMeow, users are encouraged to use it responsibly and in accordance with the game's terms of service. The developer of this bot assumes no responsibility for any bans or penalties that may result from the use of this bot. Users should be aware of PokeMeow's rules and use the bot at their own risk.
