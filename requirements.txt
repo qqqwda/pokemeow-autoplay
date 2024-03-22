@@ -2,3 +2,4 @@ selenium==4.9.0
 requests
 python-dotenv
 beautifulsoup4==4.10.0
+colorlog

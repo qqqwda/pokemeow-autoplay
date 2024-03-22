@@ -56,6 +56,11 @@ The captcha solver currently boasts around a 90% accuracy rate 🎯. However, ex
 
     RARITY_EMOJI={"Legendary": "🔮", "Shiny": "✨", "Super": "🌟", "Super Rare": "🌟", "Rare": "💎", "Uncommon": "🍀", "Common": "🌱"}
 
+    #Settings for autoplay
+    ENABLE_AUTO_BUY_BALLS=True #Recommended for new accounts
+    ENABLE_AUTO_RELEASE_DUPLICATES=False
+    ENABLE_AUTO_EGG_HATCH=True
+    ENABLE_AUTO_LOOTBOX_OPEN=True #It will open lootboxes when you have 10 or more
     ```
 
 Replace the placeholders with your actual data.

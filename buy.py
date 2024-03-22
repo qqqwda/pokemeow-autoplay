@@ -1,6 +1,6 @@
 class Buy:
     BALL_DICTIONARY = {
-        1: {"name": "Pokeball", "price": 200, "percentage_buy": 40 },
+        1: {"name": "Pokeball", "price": 200, "percentage_buy": 70 },
         2: {"name": "Greatball", "price": 500, "percentage_buy": 45 },
         3: {"name": "Ultraball", "price": 1500, "percentage_buy": 10 },
         4: {"name": "Masterball", "price": 100000, "percentage_buy": 80 }
@@ -27,4 +27,4 @@ class Buy:
                 if balls_to_buy > 0:
                     commands.append(f";shop buy {id} {balls_to_buy}") 
         return commands
-    
+

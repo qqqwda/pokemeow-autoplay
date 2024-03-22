@@ -33,9 +33,6 @@ class CaptchaService:
                 file.write(response.content)
                 # Get the list of files in the captchas directory
             files = os.listdir("captchas")
-            # Print the number of files with an emoji
-            logger.info(f'📂 Number of images in captcha folder: {len(files)}')
-            
             
             return f"captchas/image_{image_id}.png"
         
@@ -59,7 +56,7 @@ class CaptchaService:
 
                 try:
                     # Make the POST request and get the response
-                    response = requests.post(url, files=files, headers=headers, timeout=35)  # Wait up to 10 seconds
+                    response = requests.post(url, files=files, headers=headers, timeout=35)  # Wait up to 35 seconds
 
                     # If the request was successful, print the number from the response
                     if response.status_code == 200:

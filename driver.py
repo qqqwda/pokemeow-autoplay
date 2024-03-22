@@ -18,8 +18,22 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from bs4 import BeautifulSoup
 import re
+import os
+from dotenv import load_dotenv
+import msvcrt
+from inventory import Inventory
+from buy import Buy
+
+load_dotenv()
+POKEMON_DICTIONARY = json.loads(os.getenv('POKEMON_DICTIONARY'))
+RARITY_EMOJI = json.loads(os.getenv('RARITY_EMOJI'))
 logger = Logger.getInstance().get_logger()
 captcha_service = CaptchaService()
+
+ENABLE_AUTO_BUY_BALLS=os.getenv('ENABLE_AUTO_BUY_BALLS')
+ENABLE_AUTO_RELEASE_DUPLICATES=os.getenv('ENABLE_AUTO_RELEASE_DUPLICATES')
+ENABLE_AUTO_EGG_HATCH=os.getenv('ENABLE_AUTO_EGG_HATCH')
+ENABLE_AUTO_LOOTBOX=os.getenv('ENABLE_AUTO_LOOTBOX_OPEN')
 
 class Driver:
     def __init__(self, driver_path):
@@ -65,18 +79,40 @@ class Driver:
         ActionChains(self.driver).send_keys_to_element(span, Keys.BACK_SPACE*20).send_keys_to_element(span, msg).perform()
         ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
     
+    def get_last_message_from_user(self, username):
+        try:
+            # Fetch all message elements
+            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+
+            # Iterate over messages in reverse to find the last message from the user
+            for message in reversed(messages):
+                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                if user_elements:
+                    user_element = user_elements[-1]
+                    if username in user_element.text:
+                        # Find the message content
+                        return message
+
+            logger.info(f"Message from {username} not found.")
+            return None
+
+        except NoSuchElementException:
+            logger.info("Error: Unable to locate element.")
+            return None
+        
     def get_captcha(self):
         
-        div_element = self.get_last_element_by_user("PokéMeow")
+        div_element = self.get_last_message_from_user("PokéMeow")
         
         # Find the first a element within the div element
         a_element = div_element.find_elements(By.TAG_NAME, "a")[-1]
 
         # Now you can get the href attribute or do whatever you need with the a element
         href = a_element.get_attribute("href")
-        img_path = self.download_captcha(href)
         
-        return self.send_image(img_path)
+        img_path = captcha_service.download_captcha(href)
+        
+        return captcha_service.send_image(img_path)
     
     
     def get_last_element_by_user(self, username, timeout=30) -> WebElement:
@@ -86,8 +122,6 @@ class Driver:
                 lambda driver: self.check_for_new_message(username)
             )
             
-            logger.info(f"Message from {username} found.")
-
             # Fetch all message elements
             messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
 
@@ -117,11 +151,15 @@ class Driver:
 
         # Check if the last message is from the user
         if messages:
-            last_message = messages[-1]
-            user_elements = last_message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
-            if user_elements:
-                user_element = user_elements[-1]
-                return username in user_element.text
+            try:
+                last_message = messages[-1]
+                user_elements = last_message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                for user_element in user_elements:
+                    if username in user_element.text:
+                        return True
+                return False
+            except StaleElementReferenceException:
+                return False
 
         return False
     
@@ -139,14 +177,14 @@ class Driver:
                         return element
                 except StaleElementReferenceException:
                     # If the element is no longer attached to the DOM, return None
-                    logger.error("❌ Element is no longer attached to the DOM")
+                    logger.error("Element is no longer attached to the DOM")
                     return None
 
                 # Wait before checking the text of the element again
                 time.sleep(1)
 
             # If the timeout is reached without the text of the element changing, return None
-            logger.warning("⏰ Timeout reached without text change")
+            logger.warning("Timeout reached without text change")
             return None
 
         except Exception as e:
@@ -156,15 +194,23 @@ class Driver:
     
     def solve_captcha(self, element):
         
-        pokemeow_last_message = self.wait_for_element_text_to_change(element)
+        #Download the captcha image and send it to the API
+        number = self.get_captcha()
+        
+        # Write the captcha number in the chat
+        logger.info(f"🔢 Captcha response: {number}")
+        self.write(number)
+        
+        # Waits 120 seconds for the captcha to be solved
+        pokemeow_last_message = self.wait_for_element_text_to_change(element, timeout=120)
         
         if "Thank you" in pokemeow_last_message.text:
-            logger.info('🔓 Captcha solved!')
+            logger.warning('Captcha solved, continuing...')
             return
         else:
-            logger.info('❌ Captcha failed!')
-            logger.info('❌ Trying again!')
-            self.solve_captcha(pokemeow_last_message)
+            logger.error('Captcha failed, trying again!')
+            new_captcha_element = self.get_last_message_from_user("PokéMeow")
+            self.solve_captcha(new_captcha_element)
     
     
     def get_spawn_info(self, element):
@@ -212,93 +258,222 @@ class Driver:
         pokemon_json = json.dumps(pokemon_info, indent=4)
         return pokemon_json
     
+    def get_next_ball(self, current_ball):
+        balls_priority = {
+            "masterball": 4,
+            "ultraball": 3,
+            "greatball": 2,
+            "pokeball": 1
+        }
+
+        # Get the priority of the current ball
+        current_priority = balls_priority.get(current_ball)
+
+        # If the current ball is not in the dictionary or it's a Pokeball, return None
+        if current_priority is None or current_priority == 1:
+            return None
+
+        # Find the ball with the next highest priority
+        for ball, priority in sorted(balls_priority.items(), key=lambda item: item[1], reverse=True):
+            if priority < current_priority:
+                return ball
+    
+    def click_on_ball(self, ball):
+        # Attempt to find the specific ball first.
+        try:
+            last_element_html = self.get_last_element_by_user("PokéMeow")
+            balls = last_element_html.find_elements("css selector",f'img[alt="{ball}"]')
+            if balls:
+                # If the specific ball is found, click on the last occurrence of that ball.
+                balls[-1].click()
+            else:
+                next_ball = self.get_next_ball(ball)
+                logger.info(f"❌ {ball} not found. Trying {next_ball}")
+                self.click_on_ball(next_ball)
+                
+        except Exception as e:
+            logger.log(f"An error occurred: {e}")
+    
+    def get_inventory(self):
+        time.sleep(1)
+        self.write(";inv")
+        # Wait to load inventory
+        last_element_html = self.get_last_element_by_user("PokéMeow")
+        
+        inventory_json = Inventory.get_inventory(last_element_html)
+        if not inventory_json:
+            logger.info("❌Failed to get inventory.")
+            return
+        
+        # Load JSON into a Python object
+        inventory = json.loads(inventory_json)
+
+        return inventory
+    
+    def get_catch_result(self, pokemon_info, count, element):
+        if isinstance(pokemon_info, str):
+            pokemon_info = json.loads(pokemon_info)
+
+        soup = BeautifulSoup(element.get_attribute('outerHTML'), "html.parser")
+        emoji_elements = soup.find_all(string=lambda text: '✅' in text)
+
+        # Get the Pokemon name and rarity from pokemon_info
+        pokemon_name = pokemon_info.get('Name')
+        pokemon_rarity = pokemon_info.get('Rarity')
+        emoji = RARITY_EMOJI.get(pokemon_rarity, '')
+        # Check if any element contains the ✅ emoji
+        if emoji_elements:
+            span = soup.find('span', {'class': 'embedFooterText_dc937f'})
+
+            # Get the text of the span
+            text = span.get_text()
+
+            # Use a regular expression to find the earned coins
+            earned_coins = re.search(r'earned ([\d,]+) PokeCoins', text)
+            earned_coins = int(earned_coins.group(1).replace(',', ''))
+
+            # Print the Pokemon name, rarity, and earned coins in one line
+            logger.info(f'[{count}] [CATCHED!] Rarity: {pokemon_rarity} {emoji} | Pokemon: {pokemon_name} | Earned Coins: {earned_coins}')
+                
+        else:
+            logger.info(f'[{count}] [ESCAPED!] Rarity: {pokemon_rarity} {emoji} | Pokemon: {pokemon_name}')
+       
+    def buy_balls(self, inventory):
+        time.sleep(5)
+        # Initialize pokecoin count to 0
+        budget = 0
+
+        # Iterate over the inventory list
+        for item in inventory:
+            # Check if the item name is pokecoin
+            if item["name"] == "pokecoin":
+                # Update pokecoin count
+                budget = item["count"]
+                if budget > 200000:
+                    budget = 200000
+                break
+            
+        commands = Buy.generate_purchase_commands(budget)
+        if not commands:
+            logger.info("❌Not Enought budget to buy balls.")
+            return
+        
+        for command in commands:
+            #Wait 3 scs before writing next command
+            logger.info(f'💰 {command}')
+            self.write(command)
+            time.sleep(5.5)
+    
+    def open_lootbox(self, inventory):
+        for item in inventory:
+            # Check if the item name is pokecoin
+            if item["name"] == "lootbox":
+                # Update pokecoin count
+                lootboxes = item["count"]
+                if lootboxes > 10:
+                    time.sleep(3)
+                    self.write(";lb all")
+                break      
+    
+    def print_initial_message(self):
+        logger.warning("[Autplay settings] AutoBuy enabled: " + str(ENABLE_AUTO_BUY_BALLS))
+        logger.warning("[Autplay settings] AutoLootbox enabled: " + str(ENABLE_AUTO_LOOTBOX))
+        logger.warning("[Autplay settings] AutoRelease enabled: " + str(ENABLE_AUTO_RELEASE_DUPLICATES))
+        logger.warning("[Autplay settings] AutoEgg enabled: " + str(ENABLE_AUTO_EGG_HATCH))
+        logger.warning("[Autplay Advice] you can pause the bot by pressing 'p' in the console")
+        logger.warning("[Autplay Advice] you can resume the bot by pressing 'enter' in the console")
+        logger.warning("[Autplay Advice] you can stop the bot by pressing 'ctrl + c' in the console")
+        logger.warning("="*60 + "\n")      
+
     def play(self):
-        #Waits 4 seconds for the page to load 
-        catch_counter = load_catch_counter()
-        # time.sleep(3)
-        # self.write(";daily")
-        # time.sleep(4)
-        # self.write(";quest")
+        
+        self.print_initial_message()
+        
+        #Initial commands
+        self.write(";daily")
         time.sleep(4)
+        self.write(";quest") 
+        time.sleep(4)
+        catch_counter = load_catch_counter()
         while True:
-            sleep_time = random.randint(9, 12)
-            sleep_time = 7
+            
+            # Check if user pressed 'p' to pause the execution
+            if msvcrt.kbhit() and msvcrt.getch().decode('utf-8') == 'p':
+                logger.warning('Execution paused. Press enter to continue...')
+                input("Execution paused. Press enter to continue...")
+                
+            
+            sleep_time = random.randint(7, 10)
+            # sleep_time = 7
             self.write(";p")
             
             pokemeow_element_response = self.get_last_element_by_user("PokéMeow", timeout=30)
             
             if pokemeow_element_response is None:
-                logger.info('❌ No response from PokéMeow, trying again...')
+                logger.error('No response from PokéMeow, trying again...')
                 continue
             
             if "A wild Captcha appeared!" in pokemeow_element_response.text:
-                logger.info('🔒 Captcha detected')
+                logger.warning('Captcha detected')
                 self.solve_captcha(pokemeow_element_response)
                 continue
                 
             if "Please wait" in pokemeow_element_response.text:
-                logger.info('⏳ Please wait...')
+                logger.info('Please wait...')
                 time.sleep(1.5)
                 continue
             
             info_json = self.get_spawn_info(pokemeow_element_response)
+            info = json.loads(info_json)
             
-            logger.info(info_json)
+            rarity = info["Rarity"]
+            ball = POKEMON_DICTIONARY.get(rarity)
+            
+            #Catch the pokemon
+            self.click_on_ball(ball)
+            
             # Wait for the text of the element to change
-            new_text = self.wait_for_element_text_to_change(pokemeow_element_response)
+            catch_status_element = self.wait_for_element_text_to_change(pokemeow_element_response)
+            catch_counter += 1
+            save_catch_counter(catch_counter)
+            self.get_catch_result(info_json, catch_counter, catch_status_element)
             
-            # get last element edited by PokéMeow
+            if ENABLE_AUTO_BUY_BALLS:
+                if info["Balls"]["Pokeballs"] <= 1 or info["Balls"]["Greatballs"] <= 1:
+                    inventory = self.get_inventory()
+                    self.buy_balls(inventory)
             
             
             
-            # if "Please wait" in pokemeow_last_message:
-            #     #Go back to the start of the loop
-            #     time.sleep(1)
-            #     continue
-            
-            # if "TYPE" in pokemeow_last_message.lower():
-            #     logger.info('🔒 Captcha detected!')
-            #     self.solve_captcha()
-            #     continue
-                    
-            # texto = self.driver.find_elements(
-            #     "xpath", "//span[@class='embedFooterText_dc937f']")[-1].text
-            
-            # arraytext = texto.split()
-            
-            # rarity = arraytext[0]
-
-            # ball = POKEMON_DICTIONARY.get(rarity)
-
-            # if ball == None:
-            #     self.solve_captcha()
-            #     sleep_time = 1
+            if catch_counter % 50 == 0:
+                #Check inventory
+                logger.info("Checking inventory...")
+                inventory = self.get_inventory()
+                if ENABLE_AUTO_LOOTBOX:
+                    self.open_lootbox(inventory)
                 
-            # else:
-            #     self.click_on_ball(ball)
-                
-            #     pokemon_info_json = self.get_pokemon_info()
-            #     info = json.loads(pokemon_info_json)
-            #     catch_counter += 1
-            #     save_catch_counter(catch_counter)
-            #     threading.Thread(target=self.get_catch_result, args=(pokemon_info_json,catch_counter,)).start()
-                
-            #     # Now you can access the elements of pokemon_info as a dictionary
-                
-            #     if info["Balls"]["Pokeballs"] <= 1 or info["Balls"]["Greatballs"] <= 1:
-            #         inventory = self.get_inventory()
-            #         self.buy_balls(inventory)
-                
-            #     if catch_counter % 25 == 0:
-            #         self.write(";r d")
-            #         time.sleep(4)
-            #         inventory = self.get_inventory()
-            #         self.open_lootbox(inventory)
-                
-            #     if catch_counter % 100 == 0:
-            #         self.write(";quest")
-            # # Save current catch count in memory
+                if ENABLE_AUTO_EGG_HATCH:
+                    egg_status = Inventory.get_egg_status(self.get_last_message_from_user("PokéMeow"))
+                    if egg_status["can_hatch"]:
+                            time.sleep(3)
+                            logger.info("🐣 Hatching egg...")
+                            self.write(";egg hatch")
+                            
+                    # Check if can hatch or hold egg
+                    poke_egg_count = next((item['count'] for item in inventory if item['name'] == 'poke_egg'), None)
+                    if poke_egg_count > 0:
+                        if egg_status["can_hold"]:
+                            time.sleep(3)
+                            logger.info("🥚 Holding egg...")
+                            self.write(";egg hold")
             
+            #Writes quest and release duplicates every 100 catches
+            if catch_counter % 100 == 0:
+                time.sleep(3)
+                self.write(";quest")
+                if ENABLE_AUTO_RELEASE_DUPLICATES:
+                    time.sleep(4.5)
+                    self.write(";r d")
             time.sleep(sleep_time)
 
     

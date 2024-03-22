@@ -5,6 +5,33 @@ from selenium.webdriver.remote.webelement import WebElement
 class Inventory:
     
     @staticmethod
+    def get_egg_status(html_content):
+        # Check if html_content is a WebElement
+        if isinstance(html_content, WebElement):
+            html_content = html_content.get_attribute('outerHTML')
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+        # Check for READY TO HATCH
+        ready_to_hatch = soup.find(string="[READY TO HATCH!]")
+        if ready_to_hatch:
+            return {"can_hatch": True, "can_hold": False}
+
+        # Check for holding egg with counter
+        counter = soup.find(string=lambda text: "[COUNTER:" in text)
+        if counter:
+            return {"can_hatch": False, "can_hold": True}
+
+        # Check for no egg and no holding
+        eggs = soup.find_all(string=lambda text: "x Eggs" in text)
+        for egg in eggs:
+            if "0x Eggs" in egg:
+                return {"can_hatch": False, "can_hold": False}
+
+        # If none of the conditions above are met, we cannot determine the status
+        return {"can_hatch": False, "can_hold": False}
+
+
+    @staticmethod
     def get_inventory(html_content):
 
         # Check if html_content is a WebElement
@@ -42,5 +69,5 @@ class Inventory:
 # with open("index.html", "r") as file:
 #     html_content = file.read()
 
-# print(Inventory.get_inventory(html_content))
+# print(Inventory.get_egg_status(html_content))
 
