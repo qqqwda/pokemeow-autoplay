@@ -101,18 +101,22 @@ class Driver:
             return None
         
     def get_captcha(self):
-        
-        div_element = self.get_last_message_from_user("PokéMeow")
-        
-        # Find the first a element within the div element
-        a_element = div_element.find_elements(By.TAG_NAME, "a")[-1]
+        try:
+            div_element = self.get_last_message_from_user("PokéMeow")
+            
+            # Find the first a element within the div element
+            a_element = div_element.find_elements(By.TAG_NAME, "a")[-1]
 
-        # Now you can get the href attribute or do whatever you need with the a element
-        href = a_element.get_attribute("href")
-        
-        img_path = captcha_service.download_captcha(href)
-        
-        return captcha_service.send_image(img_path)
+            # Now you can get the href attribute or do whatever you need with the a element
+            href = a_element.get_attribute("href")
+            
+            img_path = captcha_service.download_captcha(href)
+            
+            return captcha_service.send_image(img_path)
+        except StaleElementReferenceException:
+            logger.error("StaleElementReferenceException occurred. Retrying...")
+            time.sleep(1)
+            return self.get_captcha()
     
     
     def get_last_element_by_user(self, username, timeout=30) -> WebElement:
@@ -221,6 +225,8 @@ class Driver:
         soup = BeautifulSoup(element.get_attribute('outerHTML'), "html.parser")
         # Find the element containing the Pokémon description
         pokemon_description = soup.find("div", class_="embedDescription__33443")
+        
+        pokemon_info["Item"] = data = soup.find('img', {'aria-label': ':held_item:'}) is not None
 
         if pokemon_description:
             # Find all strong elements within the description
@@ -310,19 +316,21 @@ class Driver:
 
         return inventory
     
+    
     def get_catch_result(self, pokemon_info, count, element):
         if isinstance(pokemon_info, str):
             pokemon_info = json.loads(pokemon_info)
 
         soup = BeautifulSoup(element.get_attribute('outerHTML'), "html.parser")
-        emoji_elements = soup.find_all(string=lambda text: '✅' in text)
+        pokemon_was_catched = soup.find_all(string=lambda text: '✅' in text)
 
         # Get the Pokemon name and rarity from pokemon_info
         pokemon_name = pokemon_info.get('Name')
         pokemon_rarity = pokemon_info.get('Rarity')
+        has_item = pokemon_info.get('Item')
         emoji = RARITY_EMOJI.get(pokemon_rarity, '')
         # Check if any element contains the ✅ emoji
-        if emoji_elements:
+        if pokemon_was_catched:
             span = soup.find('span', {'class': 'embedFooterText_dc937f'})
 
             # Get the text of the span
@@ -330,13 +338,34 @@ class Driver:
 
             # Use a regular expression to find the earned coins
             earned_coins = re.search(r'earned ([\d,]+) PokeCoins', text)
-            earned_coins = int(earned_coins.group(1).replace(',', ''))
+            
+            # Assuming earned_coins is the result of a re.match or re.search operation
+            if earned_coins is not None:
+                earned_coins = int(earned_coins.group(1).replace(',', ''))
+            else:
+                logger.error("Failed to parse earned coins.")
+                # Handle the error appropriately, e.g., by setting a default value or raising an exception
+                earned_coins = 0
 
+
+            if has_item:
+                # Looking for the span that contains the text indicating the item received
+                item_received_span = soup.find('span', string=lambda text: 'retrieved a' in text if text else False)
+
+                # Extracting the text of the next strong tag which should contain the name of the item received
+                if item_received_span:
+                    item_received = item_received_span.find_next('strong').text
+                else:
+                    item_received = "Unknown Item"
+                logger.info(f'[{count}] [CATCHED!] Rarity: {pokemon_rarity} {emoji} | Pokemon: {pokemon_name} | Earned Coins: {earned_coins} | Item: {item_received}')
+                return
+            
             # Print the Pokemon name, rarity, and earned coins in one line
             logger.info(f'[{count}] [CATCHED!] Rarity: {pokemon_rarity} {emoji} | Pokemon: {pokemon_name} | Earned Coins: {earned_coins}')
-                
+            return
         else:
             logger.info(f'[{count}] [ESCAPED!] Rarity: {pokemon_rarity} {emoji} | Pokemon: {pokemon_name}')
+            return
        
     def buy_balls(self, inventory):
         time.sleep(5)
@@ -428,9 +457,13 @@ class Driver:
             
             rarity = info["Rarity"]
             ball = POKEMON_DICTIONARY.get(rarity)
+            has_item = info["Item"]
+            #Try to catch the pokemon
+            if has_item and rarity not in "Legendary" and rarity not in "Shiny":
+                self.click_on_ball("ultraball")
+            else:
+                self.click_on_ball(ball)
             
-            #Catch the pokemon
-            self.click_on_ball(ball)
             
             # Wait for the text of the element to change
             catch_status_element = self.wait_for_element_text_to_change(pokemeow_element_response)
@@ -458,6 +491,8 @@ class Driver:
                             time.sleep(3)
                             logger.info("🐣 Hatching egg...")
                             self.write(";egg hatch")
+                            hatch_element = self.get_last_element_by_user("PokéMeow", timeout=30)
+                            # self.get_hatch_result(hatch_element)
                             
                     # Check if can hatch or hold egg
                     poke_egg_count = next((item['count'] for item in inventory if item['name'] == 'poke_egg'), None)

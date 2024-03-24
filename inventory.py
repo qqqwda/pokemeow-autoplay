@@ -19,16 +19,16 @@ class Inventory:
         # Check for holding egg with counter
         counter = soup.find(string=lambda text: "[COUNTER:" in text)
         if counter:
-            return {"can_hatch": False, "can_hold": True}
+            return {"can_hatch": False, "can_hold": False}
 
         # Check for no egg and no holding
         eggs = soup.find_all(string=lambda text: "x Eggs" in text)
         for egg in eggs:
             if "0x Eggs" in egg:
-                return {"can_hatch": False, "can_hold": False}
+                return {"can_hatch": False, "can_hold": True}
 
         # If none of the conditions above are met, we cannot determine the status
-        return {"can_hatch": False, "can_hold": False}
+        return {"can_hatch": False, "can_hold": True}
 
 
     @staticmethod
