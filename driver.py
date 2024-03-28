@@ -1,4 +1,3 @@
-from httpcore import TimeoutException
 from logger import Logger
 from dotenv import load_dotenv
 from selenium.webdriver.chrome.options import Options
@@ -23,8 +22,18 @@ from dotenv import load_dotenv
 import msvcrt
 from inventory import Inventory
 from buy import Buy
+from selenium.common.exceptions import TimeoutException
+import configparser
 
 load_dotenv()
+config = configparser.ConfigParser()
+config.read('config.ini')
+# Get the JSON string from the .ini file
+pokeball_for_pokemon_string = config.get('settings', 'pokemon_pokeball_mapping')
+# Parse the JSON string as a dictionary
+pokeball_for_pokemon = json.loads(pokeball_for_pokemon_string)
+
+
 POKEMON_DICTIONARY = json.loads(os.getenv('POKEMON_DICTIONARY'))
 RARITY_EMOJI = json.loads(os.getenv('RARITY_EMOJI'))
 logger = Logger.getInstance().get_logger()
@@ -46,6 +55,8 @@ class Driver:
         # Set up Chrome options
         options = Options()
         options.add_argument("--log-level=3")
+        #Open the browser 800x700
+        options.add_argument("--window-size=800,700")
         self.driver = webdriver.Chrome(executable_path=self.driver_path, options=options)
     
     def navigate_to_page(self, url):
@@ -62,31 +73,32 @@ class Driver:
             
     def login(self, email, password):
         time.sleep(5)
-        self.driver.find_element(
-            "xpath", "//input[@class='inputDefault__80165 input_d266e7 inputField__79601']").send_keys(email)
-        self.driver.find_element(
-            "xpath", "//input[@class='inputDefault__80165 input_d266e7']").send_keys(password)
+        
+        self.driver.find_element(By.XPATH, "//input[@name='email']").send_keys(email)
+        
+        self.driver.find_element(By.XPATH, "//input[@name='password']").send_keys(password)
         time.sleep(3)
-        self.driver.find_element(
-            "xpath", "//button[@class='marginBottom8_f4aae3 button__47891 button_afdfd9 lookFilled__19298 colorBrand_b2253e sizeLarge__9049d fullWidth__7c3e8 grow__4c8a4']").click()
+        self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
         time.sleep(8)
         pass 
 
 
     def write(self, msg):
-        span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
+        # span = self.driver.find_element(By.XPATH, "//span[contains(@class='emptyText'])")
+        span = self.driver.find_element(By.XPATH, "//span[contains(@class, 'emptyText')]")
+
         ActionChains(self.driver).send_keys_to_element(span, Keys.BACK_SPACE*20).send_keys_to_element(span, msg).perform()
         ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
     
     def get_last_message_from_user(self, username):
         try:
             # Fetch all message elements
-            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
 
             # Iterate over messages in reverse to find the last message from the user
             for message in reversed(messages):
-                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username')]")
                 if user_elements:
                     user_element = user_elements[-1]
                     if username in user_element.text:
@@ -127,37 +139,37 @@ class Driver:
             )
             
             # Fetch all message elements
-            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
 
             # Iterate over messages in reverse to find the last message from the user
             for message in reversed(messages):
-                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username')]")
                 if user_elements:
                     user_element = user_elements[-1]
                     if username in user_element.text:
                         # Return the message element
                         return message
 
-            logger.info(f"Message from {username} not found.")
+            logger.error(f"Message from {username} not found.")
             return None
 
         except TimeoutException:
-            logger.info(f"Message from {username} not found. Timeout exceeded.")
+            logger.error(f"Message from {username} not found. Timeout exceeded.")
             return None
 
         except NoSuchElementException:
-            logger.info("Error: Unable to locate element.")
+            logger.error("Error: Unable to locate element.")
             return None
 
     def check_for_new_message(self, username):
         # Fetch all message elements
-        messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+        messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
 
         # Check if the last message is from the user
         if messages:
             try:
                 last_message = messages[-1]
-                user_elements = last_message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                user_elements = last_message.find_elements(By.XPATH, ".//span[contains(@class, 'username')]")
                 for user_element in user_elements:
                     if username in user_element.text:
                         return True
@@ -224,8 +236,8 @@ class Driver:
         # Parse the HTML content
         soup = BeautifulSoup(element.get_attribute('outerHTML'), "html.parser")
         # Find the element containing the Pokémon description
-        pokemon_description = soup.find("div", class_="embedDescription__33443")
-        
+        pokemon_description = soup.select_one("div[class*='embedDescription']")
+
         pokemon_info["Item"] = data = soup.find('img', {'aria-label': ':held_item:'}) is not None
 
         if pokemon_description:
@@ -239,7 +251,9 @@ class Driver:
                 # Extract Pokémon name
                 pokemon_info["Name"] = last_strong_element.get_text(strip=True)
                 
-        span = soup.find('span', {'class': 'embedFooterText_dc937f'}) 
+        # span = soup.find('span', {'class': 'embedFooterText_dc937f'}) 
+        span = soup.select_one("span[class*='embedFooterText']")
+
         text = span.get_text()
         # Use a regular expression to find the rarity
         rarity = re.search(r'(.+?)\s*\(', span.get_text())
@@ -266,7 +280,8 @@ class Driver:
     
     def get_next_ball(self, current_ball):
         balls_priority = {
-            "masterball": 4,
+            "masterball": 5,
+            "premierball": 4,
             "ultraball": 3,
             "greatball": 2,
             "pokeball": 1
@@ -287,6 +302,7 @@ class Driver:
     def click_on_ball(self, ball):
         # Attempt to find the specific ball first.
         try:
+            time.sleep(1)
             last_element_html = self.get_last_element_by_user("PokéMeow")
             balls = last_element_html.find_elements("css selector",f'img[alt="{ball}"]')
             if balls:
@@ -331,7 +347,8 @@ class Driver:
         emoji = RARITY_EMOJI.get(pokemon_rarity, '')
         # Check if any element contains the ✅ emoji
         if pokemon_was_catched:
-            span = soup.find('span', {'class': 'embedFooterText_dc937f'})
+            
+            span = soup.find('span', class_=lambda value: value and 'embedFooterText' in value)
 
             # Get the text of the span
             text = span.get_text()
@@ -462,7 +479,12 @@ class Driver:
             if has_item and rarity not in "Legendary" and rarity not in "Shiny":
                 self.click_on_ball("ultraball")
             else:
-                self.click_on_ball(ball)
+                if info["Name"] in pokeball_for_pokemon:
+                    ball = pokeball_for_pokemon[info["Name"]]
+                    logger.info(f"🔴 Pokemon '{info['Name']}' found in the dictionary. Using {ball}...")
+                    self.click_on_ball(ball)
+                else:
+                    self.click_on_ball(ball)
             
             
             # Wait for the text of the element to change
@@ -506,9 +528,9 @@ class Driver:
             if catch_counter % 100 == 0:
                 time.sleep(3)
                 self.write(";quest")
-                if ENABLE_AUTO_RELEASE_DUPLICATES:
-                    time.sleep(4.5)
-                    self.write(";r d")
+                # if ENABLE_AUTO_RELEASE_DUPLICATES:
+                #     time.sleep(4.5)
+                #     self.write(";r d")
             time.sleep(sleep_time)
 
     
