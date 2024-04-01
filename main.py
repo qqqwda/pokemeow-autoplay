@@ -81,30 +81,29 @@ class Main:
             
     def login(self, email, password):
         time.sleep(5)
-        self.driver.find_element(
-            "xpath", "//input[@class='inputDefault__80165 input_d266e7 inputField__79601']").send_keys(email)
-        self.driver.find_element(
-            "xpath", "//input[@class='inputDefault__80165 input_d266e7']").send_keys(password)
+        
+        self.driver.find_element(By.XPATH, "//input[@name='email']").send_keys(email)
+        
+        self.driver.find_element(By.XPATH, "//input[@name='password']").send_keys(password)
         time.sleep(3)
-        self.driver.find_element(
-            "xpath", "//button[@class='marginBottom8_f4aae3 button__47891 button_afdfd9 lookFilled__19298 colorBrand_b2253e sizeLarge__9049d fullWidth__7c3e8 grow__4c8a4']").click()
+        self.driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
         time.sleep(8)
-        pass
+        pass 
     
     def get_last_message_by_user(self, username):
         try:
             # Fetch all message elements
-            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
 
             # Iterate over messages in reverse to find the last message from the user
             for message in reversed(messages):
-                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username')]")
                 if user_elements:
                     user_element = user_elements[-1]
                     if username in user_element.text:
                         # Find the message content
-                        message_content = message.find_elements(By.XPATH, ".//div[contains(@class, 'messageContent__21e69')]")[-1]
+                        message_content = message.find_elements(By.XPATH, ".//div[contains(@class, 'messageContent')]")[-1]
                         return message_content.text
 
             return "Message from user not found."
@@ -112,15 +111,14 @@ class Main:
         except NoSuchElementException:
             return "Error: Unable to locate element."
         
-        
     def get_last_element_by_user(self, username):
         try:
             # Fetch all message elements
-            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem__6a4fb')]")
+            messages = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
 
             # Iterate over messages in reverse to find the last message from the user
             for message in reversed(messages):
-                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username_d30d99')]")
+                user_elements = message.find_elements(By.XPATH, ".//span[contains(@class, 'username')]")
                 if user_elements:
                     user_element = user_elements[-1]
                     if username in user_element.text:
@@ -225,7 +223,8 @@ class Main:
 
     
     def write(self, msg):
-        span = self.driver.find_element("xpath", "//span[@class='emptyText_c03d90']")
+        span = self.driver.find_element(By.XPATH, "//span[contains(@class, 'emptyText')]")
+
         ActionChains(self.driver).send_keys_to_element(span, Keys.BACK_SPACE*20).send_keys_to_element(span, msg).perform()
         ActionChains(self.driver).send_keys_to_element(span, Keys.ENTER).perform()
  
@@ -294,7 +293,7 @@ class Main:
         emoji = RARITY_EMOJI.get(pokemon_rarity, '')
         # Check if any element contains the ✅ emoji
         if emoji_elements:
-            span = soup.find('span', {'class': 'embedFooterText_dc937f'})
+            span = soup.find('span', class_=lambda value: value and 'embedFooterText' in value)
 
             # Get the text of the span
             text = span.get_text()
@@ -372,7 +371,7 @@ class Main:
         # Parse the HTML content
         soup = BeautifulSoup(last_element_html.get_attribute('outerHTML'), "html.parser")
         # Find the element containing the Pokémon description
-        pokemon_description = soup.find("div", class_="embedDescription__33443")
+        pokemon_description = soup.select_one("div[class*='embedDescription']")
 
         if pokemon_description:
             # Find all strong elements within the description
@@ -385,7 +384,8 @@ class Main:
                 # Extract Pokémon name
                 pokemon_info["Name"] = last_strong_element.get_text(strip=True)
                 
-        span = soup.find('span', {'class': 'embedFooterText_dc937f'}) 
+        span = soup.find('span', class_=lambda value: value and 'embedFooterText' in value)
+
         text = span.get_text()
         # Use a regular expression to find the rarity
         rarity = re.search(r'(.+?)\s*\(', span.get_text())
@@ -436,8 +436,9 @@ class Main:
                 self.solve_captcha()
                 continue
                     
+                    # .find_elements(By.XPATH, "//li[contains(@class, 'messageListItem')]")
             texto = self.driver.find_elements(
-                "xpath", "//span[@class='embedFooterText_dc937f']")[-1].text
+                By.XPATH, "//span[contains(@class,'embedFooterText')]")[-1].text
             
             arraytext = texto.split()
             
@@ -484,7 +485,9 @@ if __name__ == "__main__":
     main.start_driver()
     main.navigate_to_page("https://discord.com/login")
     main.login(DISCORD_EMAIL,PASSWORD)
+    time.sleep(8)
     main.navigate_to_page(CHANNEL)
+    time.sleep(8)
     main.play()
     
     
